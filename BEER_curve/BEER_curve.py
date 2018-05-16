@@ -1,9 +1,9 @@
 import numpy as np
-from PyAstronomy.modelSuite import forTrans as ft
+from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
 
-__all__ = ['BEER_params', 'BEER_curve']
+__all__ = ['BEER_curve']
 
-class BEER_curve():
+class BEER_curve(object):
     """
     Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted components
 
@@ -18,18 +18,51 @@ class BEER_curve():
 
     """
 
-    def __init__(self, params, t):
-        #Setting my own parameters
-        self.Aellip = params.Aellip
-        self.Abeam = params.Abeam
-        self.Aplanet = params.Aplanet
+    def __init__(self, t, params):
 
-#   def planetary_curve(phi, A_refl):
-#       y = -(A_refl*cos(2.*pi*phi))
-#       y = y + abs(min(y))  
-#       return y
+        self.t = t
+        self.params = params
+
+        #Just circular orbits and quadratic LD for now
+        self.ma = MandelAgolLC(orbit="circular", ld="quad")
+
+    def _calc_phi(self):
+        """
+        Calculates orbital phase
+        """
+
+        return ((self.t - self.params['T0']) % self.params['per'])/self.params['per']
+
+    def planetary_curve(self):
+        """
+        Calculates planet's reflected/emitted component, i.e. R in BEER
+        """
+        Aplanet = self.params['Aplanet']
+        phi = self._calc_phi()
+
+        return -(Aplanet*np.cos(2.*np.pi*phi))
 
 if __name__ == "__main__":
-    BC = BEER_curve()
+    import matplotlib.pyplot as plt
 
-    print(BC.params)
+    #HAT-P-7 b parameters from Jackson et al. (2013)
+    params = {
+            "per": 2.204733,
+            "i": 83.1,
+            "a": 4.15,
+            "T0": 0.,
+            "p": 1./12.85,
+            "linLimb": 0.314709,
+            "quadLimb": 0.312125,
+            "b": 0.499,
+            "Aellip": 37.e-6,
+            "Abeam": 5.e-6, 
+            "Aplanet": 60.e-6 
+            }
+
+    t = np.linspace(0, 2*params['per'])
+
+    BC = BEER_curve(t, params)
+
+    plt.plot(t, BC.planetary_curve())
+    plt.show(block=True)
