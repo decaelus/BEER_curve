@@ -4,9 +4,10 @@ from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
 
 __all__ = ['BEER_curve']
 
+
 class BEER_curve(object):
     """
-    Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted 
+    Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted
     components (as well as transit and eclipse signals)
 
     :param Aellip: amplitude (unitless) of the ellipsoidal variations
@@ -27,7 +28,7 @@ class BEER_curve(object):
 
         self.phi = self.__calc_phi__()
 
-        #Just circular orbits and quadratic LD for now
+        # Just circular orbits and quadratic LD for now
         self.ma = MandelAgolLC(orbit="circular", ld="quad")
 
         self.ma["per"] = params["per"]
@@ -51,9 +52,9 @@ class BEER_curve(object):
 
     def __calc_eclipse_time__(self):
         """
-        Calculates mid-eclipse time - 
-            I've included this function here in anticipation of using 
-            eccentric orbits in the near future.
+        Calculates mid-eclipse time -
+        I've included this function here in anticipation of using eccentric
+        orbits in the near future.
         """
 
         T0 = self.params['T0']
@@ -93,8 +94,8 @@ class BEER_curve(object):
         Calculates all BEER curves
         """
         return self.reflected_emitted_curve() +\
-                self.beaming_curve() +\
-                self.ellipsoidal_curve()
+            self.beaming_curve() +\
+            self.ellipsoidal_curve()
 
     def transit(self):
         """
@@ -118,15 +119,15 @@ class BEER_curve(object):
         TE = self.__calc_eclipse_time__()
         eclipse_depth = self.params['eclipse_depth']
 
-        #Make a copy of ma but set limb-darkening parameters to zero for
-        #  uniform disk
+        # Make a copy of ma but set limb-darkening parameters to zero for
+        # uniform disk
         cp = copy.deepcopy(ma)
         cp['linLimb'] = 0.
         cp['quadLimb'] = 0.
         cp['T0'] = TE
         cp['p'] = np.sqrt(eclipse_depth)
 
-        #Shift so baseline out of transit and eclipse is zero
+        # Shift so baseline out of transit and eclipse is zero
         return cp.evaluate(time) - 1.0
 
     def transit_and_eclipse(self):
@@ -143,10 +144,11 @@ class BEER_curve(object):
 
         return self.transit_and_eclipse() + self.all_BEER_curves()
 
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    #HAT-P-7 b parameters from Jackson et al. (2013) 
+    # HAT-P-7 b parameters from Jackson et al. (2013)
     params = {
             "per": 2.204733,
             "i": 83.1,
@@ -158,8 +160,8 @@ if __name__ == "__main__":
             "quadLimb": 0.312125,
             "b": 0.499,
             "Aellip": 37.e-6,
-            "Abeam": 5.e-6, 
-            "Aplanet": 60.e-6 
+            "Abeam": 5.e-6,
+            "Aplanet": 60.e-6
             }
 
     t = np.linspace(0, 2*params['per'], 1000)
