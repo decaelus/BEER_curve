@@ -1,1 +1,1 @@
-#Nothing to see here, folks.
+from .BEER_curve import BEER_curve
