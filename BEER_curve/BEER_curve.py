@@ -26,7 +26,8 @@ class BEER_curve(object):
         self.time = time
         self.params = params
 
-        self.phi = self.__calc_phi__()
+        # Orbital phase
+        self.phi = self._calc_phi()
 
         # Just circular orbits and quadratic LD for now
         self.ma = MandelAgolLC(orbit="circular", ld="quad")
@@ -40,7 +41,7 @@ class BEER_curve(object):
         self.ma["quadLimb"] = params["quadLimb"]
         self.ma["b"] = params["b"]
 
-    def __calc_phi__(self):
+    def _calc_phi(self):
         """
         Calculates orbital phase
         """
@@ -50,7 +51,7 @@ class BEER_curve(object):
 
         return ((time - T0) % per)/per
 
-    def __calc_eclipse_time__(self):
+    def _calc_eclipse_time(self):
         """
         Calculates mid-eclipse time -
         I've included this function here in anticipation of using eccentric
@@ -66,10 +67,14 @@ class BEER_curve(object):
         """
         Calculates planet's reflected/emitted component, i.e. R in BEER
         """
+        
+        F0 = self.params['F0']
         Aplanet = self.params['Aplanet']
+        phase_shift = self.params['phase_shift']
+
         phi = self.phi
 
-        return -(Aplanet*np.cos(2.*np.pi*phi))
+        return F0 - Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
 
     def beaming_curve(self):
         """
@@ -106,7 +111,7 @@ class BEER_curve(object):
         time = self.time
         ma = self.ma
 
-        return ma.evaluate(time) - 1.0
+        return ma.evaluate(time)
 
     def eclipse(self):
         """
@@ -116,8 +121,8 @@ class BEER_curve(object):
 
         time = self.time
         ma = self.ma
-        TE = self.__calc_eclipse_time__()
-        eclipse_depth = self.params['eclipse_depth']
+        TE = self._calc_eclipse_time()
+        eclipse_depth = self.params['F0'] + self.params['Aplanet']
 
         # Make a copy of ma but set limb-darkening parameters to zero for
         # uniform disk
@@ -127,22 +132,31 @@ class BEER_curve(object):
         cp['T0'] = TE
         cp['p'] = np.sqrt(eclipse_depth)
 
-        # Shift so baseline out of transit and eclipse is zero
-        return cp.evaluate(time) - 1.0
-
-    def transit_and_eclipse(self):
-        """
-        Calculates both transit and eclipse signals
-        """
-
-        return self.transit() + self.eclipse()
+        return cp.evaluate(time)
 
     def all_signals(self):
         """
         Calculates BEER curves, as well as transit and eclipse signals
         """
 
-        return self.transit_and_eclipse() + self.all_BEER_curves()
+        transit = self.transit() - 1.
+        eclipse = self.eclipse()
+
+        # Shift so middle of eclipse sits at zero and reflected curve
+        # disappers in eclipse
+        scaled_eclipse = eclipse
+        scaled_eclipse[eclipse == np.min(eclipse)] = 0.
+
+        Be = self.beaming_curve()
+        
+        E = self.ellipsoidal_curve()
+        E -= np.min(E)
+
+        R = self.reflected_emitted_curve()
+
+        full_signal = transit + Be + E + R*scaled_eclipse
+
+        return full_signal
 
 
 if __name__ == "__main__":
@@ -154,14 +168,15 @@ if __name__ == "__main__":
             "i": 83.1,
             "a": 4.15,
             "T0": 0.,
-            "eclipse_depth": 60.e-6,
             "p": 1./12.85,
             "linLimb": 0.314709,
             "quadLimb": 0.312125,
             "b": 0.499,
             "Aellip": 37.e-6,
             "Abeam": 5.e-6,
-            "Aplanet": 60.e-6
+            "F0": 0., 
+            "Aplanet": 60.e-6,
+            "phase_shift": 0.
             }
 
     t = np.linspace(0, 2*params['per'], 1000)
