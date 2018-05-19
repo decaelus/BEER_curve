@@ -15,7 +15,7 @@ setup(name='BEER_curve',
       ],
       license=['GNU GPLv3'],
       packages=['BEER_curve'],
-      install_requires=['PyAstronomy'],
+      install_requires=['PyAstronomy', 'statsmodels'],
       test_suite='nose.collector',
       tests_require=['nose', 'nose-cover3'],
       zip_safe=True)
