@@ -82,15 +82,19 @@ def bindata(time, data, binsize, bin_calc='median', err_calc='mad'):
         bin_calc_func = np.nanmean
 
     if(err_calc == 'mad'):
-        err_calc_func = mad
+        err_calc_func = lambda x : mad(x)/np.sqrt(len(x))
     elif(err_calc == 'std'):
-        err_calc_func = np.nanstd
+        err_calc_func = lambda x : np.nanstd(x)/np.sqrt(len(x))
 
     for i in range(len(binned_time)):
-        ind = np.argwhere(np.abs(time - binned_time[i]) <= binsize)
+        ind = np.argwhere(np.abs(binned_time[i] - time) <= binsize)
 
-        if(ind is not None):
-            binned_data[i] = bin_calc_func(data[ind])
-            binned_err[i] = err_calc_func(data[ind])
+        if(ind.size > 0): 
+            # Remove nans, too
+            cur_data = data[ind[~np.isnan(data[ind])]] 
+            
+            if(cur_data.size > 0):
+                binned_data[i] = bin_calc_func(cur_data)
+                binned_err[i] = err_calc_func(cur_data)
 
     return binned_time, binned_data, binned_err
