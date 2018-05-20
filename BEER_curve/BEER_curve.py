@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
+from PyAstronomy.pyasl import isInTransit
 
 __all__ = ['BEER_curve']
 
@@ -8,19 +9,35 @@ class BEER_curve(object):
     """
     Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted
     components (as well as transit and eclipse signals)
-
-    :param Aellip: amplitude (unitless) of the ellipsoidal variations
-    :type u: float
-
-    :param Abeam: amplitude (unitless) of the beaming, RV signal
-    :type u: float
-
-    :param Aplanet: amplitude (unitless) of planet's reflected/emitted signal
-    :type u: float
-
     """
 
-    def __init__(self, time, params):
+    def __init__(self, time, params, data=None, zero_eclipse_method='mean'):
+        """
+        Parameters
+        ----------
+        time : numpy array
+            observational time (same units at orbital period)
+
+        params : dict of floats/numpy arrays
+            params["per"] - orbital period (any units)
+            params["i"] - orbital inclination (degrees); 
+                if not given, impact parameter must be
+            params["a"] - semi-major axis (stellar radius)
+            params["T0"] - mid-transit time (same units as period)
+            params["p"] - planet's radius (stellar radius)
+            params["LDC"] - numpy array of limb-darkening coefficients
+        params["b"] - impact parameter (stellar radius);
+            if not given, inclination angle must be
+        params["Aellip"] - amplitude of the ellipsoidal variations
+        params["Abeam"] - amplitude of the beaming, RV signal
+        params["Aplanet"] - amplitude of planet's reflected/emitted signal
+
+        data : numpy array
+            observational data (same units as BEER amplitudes)
+
+        zero_eclipse_method : str
+            which method to use to shift the data to zero the eclipse
+        """
 
         self.time = time
         self.params = params
@@ -28,17 +45,33 @@ class BEER_curve(object):
         # Orbital phase
         self.phi = self._calc_phi()
 
-        # Just circular orbits and quadratic LD for now
         self.ma = MandelAgolLC(orbit="circular", ld="quad")
+        # If quadratic limb-darkening
+        if(len(params["LDC"]) == 2):
+            self.ma["linLimb"] = params["LDC"][0]
+            self.ma["quadLimb"] = params["LDC"][1]
+
+        # If non-linear limb-darkening
+        elif(len(params["LDC"]) == 4):
+            self.ma = MandelAgolLC(orbit="circular", ld="nl")
+
+            self.ma["a1"] = params["LDC"][0]
+            self.ma["a2"] = params["LDC"][1]
+            self.ma["a3"] = params["LDC"][2]
+            self.ma["a4"] = params["LDC"][3]
 
         self.ma["per"] = params["per"]
         self.ma["i"] = params["i"]
         self.ma["a"] = params["a"]
         self.ma["T0"] = params["T0"]
         self.ma["p"] = params["p"]
-        self.ma["linLimb"] = params["linLimb"]
-        self.ma["quadLimb"] = params["quadLimb"]
         self.ma["b"] = params["b"]
+
+        if(data is not None):
+            self.data = data
+        if((zero_eclipse_method is not None) and (data is not None)):
+            self.data -= self.fit_eclipse_bottom(
+                    zero_eclipse_method=zero_eclipse_method)
 
     def _calc_phi(self):
         """
@@ -126,8 +159,17 @@ class BEER_curve(object):
         # Make a copy of ma but set limb-darkening parameters to zero for
         # uniform disk
         cp = copy.deepcopy(ma)
-        cp['linLimb'] = 0.
-        cp['quadLimb'] = 0.
+
+        # Zero out all the limb-darkening coefficients
+        if(len(self.params['LDC']) == 2):
+            cp['linLimb'] = 0.
+            cp['quadLimb'] = 0.
+        if(len(self.params['LDC']) == 4):
+            cp['a1'] = 0.
+            cp['a2'] = 0.
+            cp['a3'] = 0.
+            cp['a4'] = 0.
+
         cp['T0'] = TE
         cp['p'] = np.sqrt(eclipse_depth)
 
@@ -155,8 +197,73 @@ class BEER_curve(object):
 
         full_signal = transit + Be + E + R*scaled_eclipse
 
+        self.model_signal = full_signal
+
         return full_signal
 
+    def transit_duration(self, which_duration="full"):
+        """
+        Calculates transit duration
+
+        Parameters
+        ----------
+        which_duration : str 
+            "full" - time from first to fourth contact
+            "center" - time from contact to contact between planet's center and
+                stellar limb
+            "short" - time from second to third contact
+    
+        Returns
+        -------
+        transit_duration : float
+            transit duration in same units as period
+        """
+
+        period = self.params['per']
+        rp = self.params['p']
+        b = self.params['b']
+        sma = self.params['a']
+    
+        if(which_duration == "full"):
+            return period/np.pi*np.arcsin(np.sqrt((1. + rp)**2 - b**2)/sma)
+        elif(which_duration == "center"):
+            return period/np.pi*np.arcsin(np.sqrt(1. - b**2)/sma)
+        elif(which_duration == "short"):
+            return period/np.pi*np.arcsin(np.sqrt((1. - rp)**2 - b**2)/sma)
+        else:
+            raise \
+                ValueError("which_duration must be 'full', 'center', 'short'!")
+
+    def fit_eclipse_bottom(self, zero_eclipse_method="mean"):
+        """
+        Calculates the eclipse bottom to set the zero-point in the data
+
+        Parameters
+        ----------
+        zero_eclipse_method : str
+            Which method used to set zero-point - 
+                "mean" - Use in-eclipse average value
+                "median" - Use in-eclipse median value
+        """
+
+        if(zero_eclipse_method == "mean"):
+            calc_method = np.nanmean
+        elif(zero_eclipse_method == "median"):
+            calc_method = np.nanmedian
+        else:
+            raise ValueError("which_method should be mean or median!")
+
+        # Find in-eclipse points
+        TE = self._calc_eclipse_time()
+        dur = self.transit_duration(which_duration="short")
+        ind = isInTransit(self.time, TE, self.ma["per"], 0.5*dur,\
+                boolOutput=False)
+
+        eclipse_bottom = None
+        if(ind.size > 0):
+            eclipse_bottom = calc_method(self.data[ind])
+
+        return eclipse_bottom
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
