@@ -20,8 +20,6 @@ class BEER_curve(object):
 
         params : dict of floats/numpy arrays
             params["per"] - orbital period (any units)
-            params["i"] - orbital inclination (degrees); 
-                if not given, impact parameter must be
             params["a"] - semi-major axis (stellar radius)
             params["T0"] - mid-transit time (same units as period)
             params["p"] - planet's radius (stellar radius)
@@ -65,7 +63,8 @@ class BEER_curve(object):
             self.ma["a4"] = params["a4"]
 
         self.ma["per"] = params["per"]
-        self.ma["i"] = params["i"]
+        # Set using the impact parameter
+        self.ma["i"] = 180./np.pi*np.arccos(params["b"]/params["a"])
         self.ma["a"] = params["a"]
         self.ma["T0"] = params["T0"]
         self.ma["p"] = params["p"]
