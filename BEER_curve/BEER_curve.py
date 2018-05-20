@@ -25,11 +25,10 @@ class BEER_curve(object):
             params["a"] - semi-major axis (stellar radius)
             params["T0"] - mid-transit time (same units as period)
             params["p"] - planet's radius (stellar radius)
-            params["LDC_type"] - quadratic or non-linear limb-darkening
-            if "quad", 
+            if quadratic limb-darkening, 
                 params["linLimb"] - linear limb-darkening coefficient
                 params["quadLimb"] - quadratic limb-darkening coefficient
-            if "nl", 
+            if non-linear limb-darkening,
                 params["a*"] - limb-darkening coefficients
             params["b"] - impact parameter (stellar radius);
                 if not given, inclination angle must be
@@ -52,12 +51,12 @@ class BEER_curve(object):
 
         self.ma = MandelAgolLC(orbit="circular", ld="quad")
         # If quadratic limb-darkening
-        if(params["LDC_type"] == "quad"):
+        if("linLimb" in params):
             self.ma["linLimb"] = params["linLimb"]
             self.ma["quadLimb"] = params["quadLimb"]
 
         # If non-linear limb-darkening
-        elif(params["LDC_type"] == "nl"):
+        elif("a1" in params):
             self.ma = MandelAgolLC(orbit="circular", ld="nl")
 
             self.ma["a1"] = params["a1"]
@@ -159,24 +158,24 @@ class BEER_curve(object):
         time = self.time
         ma = self.ma
         TE = self._calc_eclipse_time()
-        eclipse_depth = self.params['F0'] + self.params['Aplanet']
+        eclipse_depth = self.params["F0"] + self.params["Aplanet"]
 
         # Make a copy of ma but set limb-darkening parameters to zero for
         # uniform disk
         cp = copy.deepcopy(ma)
 
         # Zero out all the limb-darkening coefficients
-        if(self.params["LDC_type"] == "quad"):
-            cp['linLimb'] = 0.
-            cp['quadLimb'] = 0.
-        if(self.params["LDC_type"] == "nl"):
-            cp['a1'] = 0.
-            cp['a2'] = 0.
-            cp['a3'] = 0.
-            cp['a4'] = 0.
+        if("linLimb" in self.params):
+            cp["linLimb"] = 0.
+            cp["quadLimb"] = 0.
+        if("a1" in self.params):
+            cp["a1"] = 0.
+            cp["a2"] = 0.
+            cp["a3"] = 0.
+            cp["a4"] = 0.
 
-        cp['T0'] = TE
-        cp['p'] = np.sqrt(eclipse_depth)
+        cp["T0"] = TE
+        cp["p"] = np.sqrt(eclipse_depth)
 
         return cp.evaluate(time)
 
