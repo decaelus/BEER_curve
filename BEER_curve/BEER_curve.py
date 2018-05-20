@@ -25,12 +25,17 @@ class BEER_curve(object):
             params["a"] - semi-major axis (stellar radius)
             params["T0"] - mid-transit time (same units as period)
             params["p"] - planet's radius (stellar radius)
-            params["LDC"] - numpy array of limb-darkening coefficients
-        params["b"] - impact parameter (stellar radius);
-            if not given, inclination angle must be
-        params["Aellip"] - amplitude of the ellipsoidal variations
-        params["Abeam"] - amplitude of the beaming, RV signal
-        params["Aplanet"] - amplitude of planet's reflected/emitted signal
+            params["LDC_type"] - quadratic or non-linear limb-darkening
+            if "quad", 
+                params["linLimb"] - linear limb-darkening coefficient
+                params["quadLimb"] - quadratic limb-darkening coefficient
+            if "nl", 
+                params["a*"] - limb-darkening coefficients
+            params["b"] - impact parameter (stellar radius);
+                if not given, inclination angle must be
+            params["Aellip"] - amplitude of the ellipsoidal variations
+            params["Abeam"] - amplitude of the beaming, RV signal
+            params["Aplanet"] - amplitude of planet's reflected/emitted signal
 
         data : numpy array
             observational data (same units as BEER amplitudes)
@@ -47,18 +52,18 @@ class BEER_curve(object):
 
         self.ma = MandelAgolLC(orbit="circular", ld="quad")
         # If quadratic limb-darkening
-        if(len(params["LDC"]) == 2):
-            self.ma["linLimb"] = params["LDC"][0]
-            self.ma["quadLimb"] = params["LDC"][1]
+        if(params["LDC_type"] == "quad"):
+            self.ma["linLimb"] = params["linLimb"]
+            self.ma["quadLimb"] = params["quadLimb"]
 
         # If non-linear limb-darkening
-        elif(len(params["LDC"]) == 4):
+        elif(params["LDC_type"] == "nl"):
             self.ma = MandelAgolLC(orbit="circular", ld="nl")
 
-            self.ma["a1"] = params["LDC"][0]
-            self.ma["a2"] = params["LDC"][1]
-            self.ma["a3"] = params["LDC"][2]
-            self.ma["a4"] = params["LDC"][3]
+            self.ma["a1"] = params["a1"]
+            self.ma["a2"] = params["a2"]
+            self.ma["a3"] = params["a3"]
+            self.ma["a4"] = params["a4"]
 
         self.ma["per"] = params["per"]
         self.ma["i"] = params["i"]
@@ -161,10 +166,10 @@ class BEER_curve(object):
         cp = copy.deepcopy(ma)
 
         # Zero out all the limb-darkening coefficients
-        if(len(self.params['LDC']) == 2):
+        if(self.params["LDC_type"] == "quad"):
             cp['linLimb'] = 0.
             cp['quadLimb'] = 0.
-        if(len(self.params['LDC']) == 4):
+        if(self.params["LDC_type"] == "nl"):
             cp['a1'] = 0.
             cp['a2'] = 0.
             cp['a3'] = 0.
