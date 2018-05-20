@@ -2,7 +2,42 @@ from scipy.signal import medfilt
 import numpy as np
 from statsmodels.robust.scale import mad
 
-__all__ = ['median_boxcar_filter']
+__all__ = ['bindata', 'median_boxcar_filter', 'transit_duration']
+
+def transit_duration(sma, rp, b, period, which_duration="full"):
+    """
+    Calculates transit duration
+
+    Parameters
+    ----------
+    sma : float
+        semi-major axis scaled to stellar radius
+    rp : float
+        planet-to-star radius ratio
+    b : float
+        impact parameter
+    period : float
+        orbital period
+    which_duration : str
+        'full' - time from first to fourth contact
+        'center' - time from contact to contact between planet's center and 
+            stellar limb
+        'short' - time from second to third contact
+
+    Returns
+    -------
+    transit_duration : float
+        transit duration in same units as period
+    """
+
+    if(which_duration == "full"):
+        return period/np.pi*np.arcsin(np.sqrt((1. + rp)**2 - b**2)/sma)
+    elif(which_duration == "center"):
+        return period/np.pi*np.arcsin(np.sqrt(1. - b**2)/sma)
+    elif(which_duration == "short"):
+        return period/np.pi*np.arcsin(np.sqrt((1. - rp)**2 - b**2)/sma)
+    else:
+        raise ValueError("which_duration must be 'full', 'center', 'short'!")
 
 def median_boxcar_filter(data, window_length=None, endpoints='reflect'):
     """

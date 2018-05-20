@@ -4,8 +4,6 @@ from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
 
 __all__ = ['BEER_curve']
 
-
-
 class BEER_curve(object):
     """
     Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted
