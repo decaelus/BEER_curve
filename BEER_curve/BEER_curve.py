@@ -5,13 +5,15 @@ from PyAstronomy.pyasl import isInTransit
 
 __all__ = ['BEER_curve']
 
+
 class BEER_curve(object):
     """
     Calculates the BEaming, Ellipsoidal variation, and Reflected/emitted
     components (as well as transit and eclipse signals)
     """
 
-    def __init__(self, time, params, data=None, zero_eclipse_method='mean'):
+    def __init__(self, time, params, data=None, zero_eclipse_method='mean',
+                 supersample_factor=1, exp_time=0):
         """
         Parameters
         ----------
@@ -23,7 +25,7 @@ class BEER_curve(object):
             params["a"] - semi-major axis (stellar radius)
             params["T0"] - mid-transit time (same units as period)
             params["p"] - planet's radius (stellar radius)
-            if quadratic limb-darkening, 
+            if quadratic limb-darkening,
                 params["linLimb"] - linear limb-darkening coefficient
                 params["quadLimb"] - quadratic limb-darkening coefficient
             if non-linear limb-darkening,
@@ -42,9 +44,23 @@ class BEER_curve(object):
 
         supersample_factor : int
             Number of points subdividing exposure
+
+        exp_time : float
+            Exposure time (in same units as `t`)
         """
 
+        # Based on Kreidberg's batman approach
+        self.supersample_factor = supersample_factor
         self.time = time
+        self.exp_time = exp_time
+        if self.supersample_factor > 1:
+            time_offsets = np.linspace(-self.exp_time/2.,
+                                       self.exp_time/2.,
+                                       self.supersample_factor)
+            self.time_supersample = (time_offsets + 
+                    self.time.reshape(self.time.size, 1)).flatten()
+        else: self.time_supersample = self.time
+
         self.params = params
 
         # Orbital phase
@@ -84,7 +100,7 @@ class BEER_curve(object):
         """
         Calculates orbital phase
         """
-        time = self.time
+        time = self.time_supersample
         T0 = self.params['T0']
         per = self.params['per']
 
@@ -139,7 +155,7 @@ class BEER_curve(object):
         the transit light curve
         """
 
-        time = self.time
+        time = self.time_supersample
         ma = self.ma
 
         return ma.evaluate(time)
@@ -150,7 +166,7 @@ class BEER_curve(object):
         limb to calculate eclipse
         """
 
-        time = self.time
+        time = self.time_supersample
         ma = self.ma
         TE = self._calc_eclipse_time()
         eclipse_depth = self.params["F0"] + self.params["Aplanet"]
@@ -195,8 +211,15 @@ class BEER_curve(object):
         R = self._reflected_emitted_curve()
 
         full_signal = transit + Be + E + R*scaled_eclipse
-
         self.model_signal = full_signal
+
+        if(self.supersample_factor > 1): 
+            self.model_signal =\
+                    np.mean(full_signal.reshape(-1, self.supersample_factor),\
+                    axis=1)
+            full_signal =\
+                    np.mean(full_signal.reshape(-1, self.supersample_factor),\
+                    axis=1)
 
         return full_signal
 
@@ -253,16 +276,18 @@ class BEER_curve(object):
             raise ValueError("which_method should be mean or median!")
 
         # Find in-eclipse points
+        time = self.time
+        period = self.ma["per"]
         TE = self._calc_eclipse_time()
         dur = self.transit_duration(which_duration="short")
-        ind = isInTransit(self.time, TE, self.ma["per"], 0.5*dur,\
-                boolOutput=False)
+        ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=False)
 
         eclipse_bottom = None
         if(ind.size > 0):
             eclipse_bottom = calc_method(self.data[ind])
 
         return eclipse_bottom
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
