@@ -39,6 +39,9 @@ class BEER_curve(object):
 
         zero_eclipse_method : str
             which method to use to shift the data to zero the eclipse
+
+        supersample_factor : int
+            Number of points subdividing exposure
         """
 
         self.time = time
@@ -74,7 +77,8 @@ class BEER_curve(object):
             self.data = data
         if((zero_eclipse_method is not None) and (data is not None)):
             self.data -= self.fit_eclipse_bottom(
-                    zero_eclipse_method=zero_eclipse_method)
+                    zero_eclipse_method=zero_eclipse_method
+                    )
 
     def _calc_phi(self):
         """
@@ -98,7 +102,7 @@ class BEER_curve(object):
 
         return T0 + 0.5*per
 
-    def reflected_emitted_curve(self):
+    def _reflected_emitted_curve(self):
         """
         Calculates planet's reflected/emitted component, i.e. R in BEER
         """
@@ -111,7 +115,7 @@ class BEER_curve(object):
 
         return F0 - Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
 
-    def beaming_curve(self):
+    def _beaming_curve(self):
         """
         Calculates the beaming effect curve
         """
@@ -120,7 +124,7 @@ class BEER_curve(object):
 
         return Abeam*np.sin(2.*np.pi*phi)
 
-    def ellipsoidal_curve(self):
+    def _ellipsoidal_curve(self):
         """
         Calculates the ellipsoidal variation curve
         """
@@ -129,15 +133,7 @@ class BEER_curve(object):
 
         return -Aellip*np.cos(2.*2.*np.pi*phi)
 
-    def all_BEER_curves(self):
-        """
-        Calculates all BEER curves
-        """
-        return self.reflected_emitted_curve() +\
-            self.beaming_curve() +\
-            self.ellipsoidal_curve()
-
-    def transit(self):
+    def _transit(self):
         """
         Uses PyAstronomy's quadratic limb-darkening routine to calculate
         the transit light curve
@@ -148,7 +144,7 @@ class BEER_curve(object):
 
         return ma.evaluate(time)
 
-    def eclipse(self):
+    def _eclipse(self):
         """
         Uses PyAstronomy's transit light curve routine with uniform
         limb to calculate eclipse
@@ -183,20 +179,20 @@ class BEER_curve(object):
         Calculates BEER curves, as well as transit and eclipse signals
         """
 
-        transit = self.transit() - 1.
-        eclipse = self.eclipse()
+        transit = self._transit() - 1.
+        eclipse = self._eclipse()
 
         # Shift so middle of eclipse sits at zero and reflected curve
         # disappers in eclipse
         scaled_eclipse = eclipse
         scaled_eclipse[eclipse == np.min(eclipse)] = 0.
 
-        Be = self.beaming_curve()
+        Be = self._beaming_curve()
         
-        E = self.ellipsoidal_curve()
+        E = self._ellipsoidal_curve()
         E -= np.min(E)
 
-        R = self.reflected_emitted_curve()
+        R = self._reflected_emitted_curve()
 
         full_signal = transit + Be + E + R*scaled_eclipse
 
