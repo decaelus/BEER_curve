@@ -12,8 +12,8 @@ class BEER_curve(object):
     components (as well as transit and eclipse signals)
     """
 
-    def __init__(self, time, params, data=None, zero_eclipse_method='mean',
-                 supersample_factor=1, exp_time=0):
+    def __init__(self, time, params, data=None, third_harmonic=False,
+            zero_eclipse_method='mean', supersample_factor=1, exp_time=0):
         """
         Parameters
         ----------
@@ -36,8 +36,15 @@ class BEER_curve(object):
             params["Abeam"] - amplitude of the beaming, RV signal
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
 
+            if(third_harmonic):
+            params["A3"] - amplitude of third harmonic
+            params["theta3"] - phase offset for third harmonic
+
         data : numpy array
             observational data (same units as BEER amplitudes)
+
+        third_harmonic : bool
+            Whether or not to include a third harmonic in phase curve
 
         zero_eclipse_method : str
             which method to use to shift the data to zero the eclipse
@@ -88,6 +95,8 @@ class BEER_curve(object):
         self.ma["T0"] = params["T0"]
         self.ma["p"] = params["p"]
         self.ma["b"] = params["b"]
+
+        self.third_harmonic = third_harmonic
 
         if(data is not None):
             self.data = data
@@ -148,6 +157,16 @@ class BEER_curve(object):
         phi = self.phi
 
         return -Aellip*np.cos(2.*2.*np.pi*phi)
+
+    def _third_harmonic(self):
+        """
+        Returns third harmonic relevant to HAT-P-7 and KOI-13
+        """
+        A3 = self.params['A3']
+        theta3 = self.params['theta3']
+        phi = self.phi
+
+        return A3*np.cos(3.*2.*np.pi*(phi - theta3))
 
     def _transit(self):
         """
@@ -211,6 +230,9 @@ class BEER_curve(object):
         R = self._reflected_emitted_curve()
 
         full_signal = transit + Be + E + R*scaled_eclipse
+        if(self.third_harmonic):
+            full_signal += self._third_harmonic()
+
         self.model_signal = full_signal
 
         if(self.supersample_factor > 1): 
@@ -280,7 +302,7 @@ class BEER_curve(object):
         period = self.ma["per"]
         TE = self._calc_eclipse_time()
         dur = self.transit_duration(which_duration="short")
-        ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=False)
+        ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=True)
 
         eclipse_bottom = None
         if(ind.size > 0):

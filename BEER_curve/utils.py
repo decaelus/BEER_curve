@@ -35,6 +35,9 @@ def median_boxcar_filter(data, window_length=None, endpoints='reflect'):
             data[last_index - window_length:last_index]))
 
         # Make filter
+        # Check that window_length is odd
+        if(window_length % 2 == 0):
+            window_length += 1
         filt = medfilt(filter_array, window_length)
 
         filt = filt[window_length:window_length + last_index + 1]
@@ -71,10 +74,14 @@ def bindata(time, data, binsize, bin_calc='median', err_calc='mad'):
     binned_err : numpy array
     """
 
-    binned_time = np.arange(np.min(time) + 0.5*binsize, 
+    # 2018 May 23 - There are not always points in each time bin,
+    #   so we will TRY to find points but will not always find them.
+    times_to_try = np.arange(np.min(time) + 0.5*binsize, 
             np.max(time) - 0.5*binsize, binsize)
-    binned_data = np.zeros(len(binned_time))
-    binned_err = np.zeros(len(binned_time))
+
+    binned_time = np.array([])
+    binned_data = np.array([])
+    binned_err = np.array([])
 
     if(bin_calc == 'median'):
         bin_calc_func = np.nanmedian
@@ -86,15 +93,17 @@ def bindata(time, data, binsize, bin_calc='median', err_calc='mad'):
     elif(err_calc == 'std'):
         err_calc_func = lambda x : np.nanstd(x)/np.sqrt(len(x))
 
-    for i in range(len(binned_time)):
-        ind = np.argwhere(np.abs(binned_time[i] - time) <= binsize)
+    for i in range(len(times_to_try)):
+        ind = np.argwhere(np.abs(times_to_try[i] - time) <= binsize)
 
         if(ind.size > 0): 
             # Remove nans, too
             cur_data = data[ind[~np.isnan(data[ind])]] 
             
             if(cur_data.size > 0):
-                binned_data[i] = bin_calc_func(cur_data)
-                binned_err[i] = err_calc_func(cur_data)
+                binned_time = np.append(binned_time, times_to_try[i])
+
+                binned_data = np.append(binned_data, bin_calc_func(cur_data))
+                binned_err = np.append(binned_err, err_calc_func(cur_data))
 
     return binned_time, binned_data, binned_err
