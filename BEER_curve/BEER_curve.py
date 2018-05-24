@@ -94,7 +94,6 @@ class BEER_curve(object):
         self.ma["a"] = params["a"]
         self.ma["T0"] = params["T0"]
         self.ma["p"] = params["p"]
-        self.ma["b"] = params["b"]
 
         self.third_harmonic = third_harmonic
 

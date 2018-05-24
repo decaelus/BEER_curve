@@ -104,6 +104,12 @@ def bindata(time, data, binsize, bin_calc='median', err_calc='mad'):
                 binned_time = np.append(binned_time, times_to_try[i])
 
                 binned_data = np.append(binned_data, bin_calc_func(cur_data))
-                binned_err = np.append(binned_err, err_calc_func(cur_data))
+
+                # Check for bad error value
+                try_error = err_calc_func(cur_data)
+                if(try_error == 0.):
+                    binned_err = np.append(binned_err, 1.)
+                else:
+                    binned_err = np.append(binned_err, err_calc_func(cur_data))
 
     return binned_time, binned_data, binned_err
