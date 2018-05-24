@@ -61,11 +61,10 @@ class BEER_curve(object):
         self.time = time
         self.exp_time = exp_time
         if self.supersample_factor > 1:
-            time_offsets = np.linspace(-self.exp_time/2.,
-                                       self.exp_time/2.,
-                                       self.supersample_factor)
-            self.time_supersample = (time_offsets + 
-                    self.time.reshape(self.time.size, 1)).flatten()
+            time_size = exp_time/self.supersample_factor
+            self.time_supersample = np.arange(np.min(time) - 0.5*exp_time, 
+                    np.max(time) + 0.5*exp_time + time_size,
+                    time_size)
         else: self.time_supersample = self.time
 
         self.params = params
@@ -184,7 +183,7 @@ class BEER_curve(object):
         limb to calculate eclipse
         """
 
-        time = self.time_supersample
+        time_supersample = self.time_supersample
         ma = self.ma
         TE = self._calc_eclipse_time()
         eclipse_depth = self.params["F0"] + self.params["Aplanet"]
@@ -206,12 +205,15 @@ class BEER_curve(object):
         cp["T0"] = TE
         cp["p"] = np.sqrt(eclipse_depth)
 
-        return cp.evaluate(time)
+        return cp.evaluate(time_supersample)
 
     def all_signals(self):
         """
         Calculates BEER curves, as well as transit and eclipse signals
         """
+
+        time_supersample = self.time_supersample
+        time = self.time
 
         transit = self._transit() - 1.
         eclipse = self._eclipse()
@@ -235,12 +237,22 @@ class BEER_curve(object):
         self.model_signal = full_signal
 
         if(self.supersample_factor > 1): 
-            self.model_signal =\
-                    np.mean(full_signal.reshape(-1, self.supersample_factor),\
-                    axis=1)
-            full_signal =\
-                    np.mean(full_signal.reshape(-1, self.supersample_factor),\
-                    axis=1)
+#           self.model_signal =\
+#                   np.mean(full_signal.reshape(-1, self.supersample_factor),\
+#                   axis=1)
+#           full_signal =\
+#                   np.mean(full_signal.reshape(-1, self.supersample_factor),\
+#                   axis=1)
+
+            # Make sure to bin the left-most data, too.
+            digitized = np.digitize(time_supersample, time)
+            print(digitized)
+            self.model_signal = np.array([
+                full_signal[digitized == i].mean() for i in range(0,
+                    len(time))])
+            full_signal = np.array([
+                full_signal[digitized == i].mean() for i in range(0,
+                    len(time))])
 
         return full_signal
 
@@ -303,7 +315,7 @@ class BEER_curve(object):
         dur = self.transit_duration(which_duration="short")
         ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=True)
 
-        eclipse_bottom = None
+        eclipse_bottom = 0.
         if(ind.size > 0):
             eclipse_bottom = calc_method(self.data[ind])
 
