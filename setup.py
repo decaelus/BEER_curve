@@ -5,11 +5,11 @@ def readme():
         return f.read()
 
 setup(name='BEER_curve',
-      version='0.1',
+      version='0.2',
       author='Brian Jackson',
       author_email='bjackson@boisestate.edu',
       classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 2 - Pre-Alpha',
         'Topic :: Scientific/Engineering',
         'Programming Language :: Python'
       ],

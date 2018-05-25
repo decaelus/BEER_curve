@@ -61,10 +61,12 @@ class BEER_curve(object):
         self.time = time
         self.exp_time = exp_time
         if self.supersample_factor > 1:
-            time_size = exp_time/self.supersample_factor
-            self.time_supersample = np.arange(np.min(time) - 0.5*exp_time, 
-                    np.max(time) + 0.5*exp_time + time_size,
-                    time_size)
+            t_offsets = np.linspace(-self.exp_time/2., 
+                    self.exp_time/2., 
+                    self.supersample_factor)
+            self.time_supersample = (t_offsets +\
+                    self.time.reshape(self.time.size, 1)).flatten()
+
         else: self.time_supersample = self.time
 
         self.params = params
