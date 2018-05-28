@@ -10,6 +10,7 @@ setup(name='BEER_curve',
       author='Brian Jackson',
       author_email='bjackson@boisestate.edu',
       url='https://github.com/decaelus/BEER_curve',
+      download_url = 'https://github.com/decaelus/BEER_curve/archive/0.1.tar.gz',
       classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Topic :: Scientific/Engineering',
