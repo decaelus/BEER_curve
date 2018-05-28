@@ -1,5 +1,12 @@
 from setuptools import setup
 
+# read the contents of your README file
+# https://packaging.python.org/guides/making-a-pypi-friendly-readme/
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+
 def readme():
     with open('README.rst') as f:
         return f.read()
@@ -21,4 +28,6 @@ setup(name='BEER_curve',
       install_requires=['PyAstronomy', 'statsmodels'],
       test_suite='nose.collector',
       tests_require=['nose', 'nose-cover3'],
+      long_description=long_description,
+      long_description_content_type='text/markdown'
       zip_safe=True)
