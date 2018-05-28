@@ -11,8 +11,7 @@ setup(name='BEER_curve',
     author_email='bjackson@boisestate.edu',
     url='https://github.com/decaelus/BEER_curve',
     download_url = 'https://github.com/decaelus/BEER_curve/archive/0.1.tar.gz',
-    long_description = 'A very small package to model the BEaming, Ellipsoidal
-    variations, and Reflected/emitted light from low-mass companions',
+    long_description = 'A very small package to model the BEaming, Ellipsoidal variations, and Reflected/emitted light from low-mass companions',
     long_description_content_type = 'text/plain',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
