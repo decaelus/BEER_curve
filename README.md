@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from BEER_curve import BEER_curve
 
-# HAT-P-7 b parameters from Jackson et al. (2013)
+# HAT-P-7 b parameters from Jackson et al. (2012)
 params = {
     "per": 2.204733,
     "i": 83.1,
