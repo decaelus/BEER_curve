@@ -4,7 +4,7 @@ from setuptools import setup
 # https://packaging.python.org/guides/making-a-pypi-friendly-readme/
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+with open(path.join(this_directory, 'README.md')) as f:
         long_description = f.read()
 
 def readme():
@@ -27,5 +27,5 @@ setup(name='BEER_curve',
       packages=['BEER_curve'],
       install_requires=['PyAstronomy', 'statsmodels'],
       long_description=long_description,
-      long_description_content_type='text/markdown',
+      long_description_content_type='text/markdown; charset=UTF-8; variant=GFM',
       zip_safe=True)
