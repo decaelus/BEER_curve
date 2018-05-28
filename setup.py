@@ -27,5 +27,5 @@ setup(name='BEER_curve',
       packages=['BEER_curve'],
       install_requires=['PyAstronomy', 'statsmodels'],
       long_description=long_description,
-      long_description_content_type='text/markdown',
+      long_description_content_type='text/markdown; charset=UTF-8; variant=GFM',
       zip_safe=True)
