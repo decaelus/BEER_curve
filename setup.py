@@ -6,8 +6,7 @@ def readme():
 
 setup(name='BEER_curve',
       version='0.2',
-      description='A very small package to model the BEaming, Ellipsoidal
-      variations, and Reflected/emitted light from low-mass companions',
+      description='A very small package to model the BEaming, Ellipsoidal variations, and Reflected/emitted light from low-mass companions',
       author='Brian Jackson',
       author_email='bjackson@boisestate.edu',
       url='https://github.com/decaelus/BEER_curve',
