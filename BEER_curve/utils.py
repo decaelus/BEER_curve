@@ -167,4 +167,12 @@ def fit_eclipse_bottom(time, data, params, zero_eclipse_method="mean"):
     # Find in-eclipse points
     period = params["per"]
     TE = calc_eclipse_time(params)
+    dur = transit_duration(which_duration="short")
+    ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=True)
+
+    eclipse_bottom = 0.
+    if(ind.size > 0):
+        eclipse_bottom = calc_method(data[ind])
+
+    return eclipse_bottom
 
