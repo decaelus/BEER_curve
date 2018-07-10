@@ -113,3 +113,58 @@ def bindata(time, data, binsize, bin_calc='median', err_calc='mad'):
                     binned_err = np.append(binned_err, err_calc_func(cur_data))
 
     return binned_time, binned_data, binned_err
+
+def calc_eclipse_time(params):
+    """Calculates mid-eclipse time, assuming zero eccentricity
+
+    Args:
+        params: dict of floats/numpy arrays, including
+            params["per"] - orbital period (any units)
+            params["T0"] - mid-transit time (same units as period)
+
+    Returns:
+        mid-eclipse time
+    """
+
+    T0 = params['T0']
+    per = params['per']
+
+    return T0 + 0.5*per
+    dur = transit_duration(which_duration="short")
+    ind = isInTransit(time, TE, period, 0.5*dur, boolOutput=True)
+
+    eclipse_bottom = 0.
+    if(ind.size > 0):
+        eclipse_bottom = calc_method(data[ind])
+
+    return eclipse_bottom
+
+def fit_eclipse_bottom(time, data, params, zero_eclipse_method="mean"):
+    """Calculates the eclipse bottom to set the zero-point in the data
+
+    Args:
+        time: observational time (same units at orbital period)
+        data: observational data
+        params: dict of floats/numpy arrays, including
+            params["per"] - orbital period, same units as time
+            params["T0"] - mid-transit time
+        zero_eclipse_method (str):
+            Which method used to set zero-point -
+                "mean" - Use in-eclipse average value
+                "median" - Use in-eclipse median value
+
+    Returns:
+        eclipse bottom value
+    """
+
+    if(zero_eclipse_method == "mean"):
+        calc_method = np.nanmean
+    elif(zero_eclipse_method == "median"):
+        calc_method = np.nanmedian
+    else:
+        raise ValueError("which_method should be mean or median!")
+
+    # Find in-eclipse points
+    period = params["per"]
+    TE = calc_eclipse_time(params)
+

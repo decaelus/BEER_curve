@@ -1,16 +1,17 @@
 from setuptools import setup
+import BEER_curve
 
 def readme():
     with open('README.md') as f:
         return f.read()
 
 setup(name='BEER_curve',
-    version='0.2',
+    version=BEER_curve.__version__,
     description='A very small package to model the BEaming, Ellipsoidal variations, and Reflected/emitted light from low-mass companions',
     author='Brian Jackson',
     author_email='bjackson@boisestate.edu',
     url='https://github.com/decaelus/BEER_curve',
-    download_url = 'https://github.com/decaelus/BEER_curve/archive/0.1.tar.gz',
+    download_url = 'https://github.com/decaelus/BEER_curve/archive/0.3.tar.gz',
     long_description = 'A very small package to model the BEaming, Ellipsoidal variations, and Reflected/emitted light from low-mass companions',
     long_description_content_type = 'text/plain',
     classifiers=[
