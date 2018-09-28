@@ -2,7 +2,7 @@ from scipy.signal import medfilt
 import numpy as np
 from statsmodels.robust.scale import mad
 
-__all__ = ['bindata', 'median_boxcar_filter']
+__all__ = ['bindata', 'median_boxcar_filter', 'fit_eclipse_bottom']
 
 def median_boxcar_filter(data, window_length=None, endpoints='reflect'):
     """
