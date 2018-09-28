@@ -186,28 +186,39 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        ma = self.ma
-        TE = self._calc_eclipse_time()
         eclipse_depth = self.params["F0"] + self.params["Aplanet"]
 
-        # Make a copy of ma but set limb-darkening parameters to zero for
-        # uniform disk
-        cp = copy.deepcopy(ma)
+        if(eclipse_depth != 0):
+            ma = self.ma    
+            TE = self._calc_eclipse_time()
+            # Make a copy of ma but set limb-darkening parameters to zero for
+            # uniform disk
+            cp = copy.deepcopy(ma)
 
-        # Zero out all the limb-darkening coefficients
-        if("linLimb" in self.params):
-            cp["linLimb"] = 0.
-            cp["quadLimb"] = 0.
-        if("a1" in self.params):
-            cp["a1"] = 0.
-            cp["a2"] = 0.
-            cp["a3"] = 0.
-            cp["a4"] = 0.
+            # Zero out all the limb-darkening coefficients
+            if("linLimb" in self.params):
+                cp["linLimb"] = 0.
+                cp["quadLimb"] = 0.
+            if("a1" in self.params):
+                cp["a1"] = 0.
+                cp["a2"] = 0.
+                cp["a3"] = 0.
+                cp["a4"] = 0.
 
-        cp["T0"] = TE
-        cp["p"] = np.sqrt(eclipse_depth)
+            cp["T0"] = TE
+            cp["p"] = np.sqrt(eclipse_depth)
 
-        return cp.evaluate(time_supersample)
+            eclipse = cp.evaluate(time_supersample)
+
+            # Rescale eclipse
+            eclipse = 1. - eclipse
+            eclipse /= eclipse_depth
+            eclipse = 1. - eclipse
+
+        elif(eclipse_depth == 0.): 
+            eclipse = 0.
+
+        return eclipse
 
     def all_signals(self):
         """
@@ -220,11 +231,6 @@ class BEER_curve(object):
         transit = self._transit() - 1.
         eclipse = self._eclipse()
 
-        # Shift so middle of eclipse sits at zero and reflected curve
-        # disappers in eclipse
-        scaled_eclipse = eclipse
-        scaled_eclipse[eclipse == np.min(eclipse)] = 0.
-
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
@@ -232,7 +238,7 @@ class BEER_curve(object):
 
         R = self._reflected_emitted_curve()
 
-        full_signal = transit + Be + E + R*scaled_eclipse
+        full_signal = transit + Be + E + R*eclipse
         if(self.third_harmonic):
             full_signal += self._third_harmonic()
 
