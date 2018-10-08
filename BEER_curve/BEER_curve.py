@@ -206,7 +206,7 @@ class BEER_curve(object):
                 cp["a4"] = 0.
 
             cp["T0"] = TE
-            cp["p"] = np.sqrt(eclipse_depth)
+            cp["p"] = np.sqrt(np.abs(eclipse_depth))
 
             eclipse = cp.evaluate(time_supersample)
 
