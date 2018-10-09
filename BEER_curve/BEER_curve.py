@@ -217,7 +217,7 @@ class BEER_curve(object):
             eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
-            eclipse = 1.
+            eclipse = 0.
 
         return eclipse
 
