@@ -212,7 +212,7 @@ class BEER_curve(object):
 
             # Rescale eclipse
             eclipse = 1. - eclipse
-            eclipse /= np.max(eclipse)
+            eclipse /= eclipse_depth
             eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
@@ -241,7 +241,7 @@ class BEER_curve(object):
 
         R = self._reflected_emitted_curve()
 
-        full_signal = baseline + transit + Be + E + R*eclipse*eclipse_depth
+        full_signal = baseline + transit + Be + E + R*eclipse
         if(self.third_harmonic):
             full_signal += self._third_harmonic()
 
