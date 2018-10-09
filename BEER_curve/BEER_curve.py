@@ -187,7 +187,6 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        eclipse_depth = self.params["eclipse_depth"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
@@ -207,13 +206,12 @@ class BEER_curve(object):
                 cp["a4"] = 0.
 
             cp["T0"] = TE
-            cp["p"] = np.sqrt(np.abs(eclipse_depth))
 
             eclipse = cp.evaluate(time_supersample)
 
             # Rescale eclipse
             eclipse = 1. - eclipse
-            eclipse /= eclipse_depth
+            eclipse /= np.max(eclipse)
             eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
@@ -233,6 +231,7 @@ class BEER_curve(object):
         eclipse = self._eclipse()
 
         baseline = self.params["F0"]
+        eclipse_depth = self.params["eclipse_depth"]
 
         Be = self._beaming_curve()
         
@@ -241,7 +240,7 @@ class BEER_curve(object):
 
         R = self._reflected_emitted_curve()
 
-        full_signal = baseline + transit + Be + E + R*eclipse
+        full_signal = baseline + transit + Be + E + R*eclipse*eclipse_depth
         if(self.third_harmonic):
             full_signal += self._third_harmonic()
 
