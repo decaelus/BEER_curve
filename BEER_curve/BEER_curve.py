@@ -237,7 +237,7 @@ class BEER_curve(object):
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
-        E -= np.min(E)
+#       E -= np.min(E)
 
         R = self._reflected_emitted_curve()
 
