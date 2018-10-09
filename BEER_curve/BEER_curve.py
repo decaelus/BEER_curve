@@ -207,6 +207,7 @@ class BEER_curve(object):
                 cp["a4"] = 0.
 
             cp["T0"] = TE
+            cp["p"] = eclipse_depth
 
             eclipse = cp.evaluate(time_supersample)
 
@@ -232,12 +233,11 @@ class BEER_curve(object):
         eclipse = self._eclipse()
 
         baseline = self.params["F0"]
-        eclipse_depth = self.params["eclipse_depth"]
 
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
-#       E -= np.min(E)
+        E -= np.min(E)
 
         R = self._reflected_emitted_curve()
 
