@@ -212,12 +212,12 @@ class BEER_curve(object):
             eclipse = cp.evaluate(time_supersample)
 
             # Rescale eclipse
-            eclipse = 1. - eclipse
-            eclipse /= eclipse_depth
-            eclipse = 1. - eclipse
+#           eclipse = 1. - eclipse
+#           eclipse /= eclipse_depth
+#           eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
-            eclipse = 0.
+            eclipse = np.ones_like(time_supersample)
 
         return eclipse
 

@@ -1,5 +1,5 @@
 __all__ = ['BEER_curve']
 
-__version__ = '0.59'
+__version__ = '0.60'
 
 from .BEER_curve import *
