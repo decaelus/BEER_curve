@@ -187,6 +187,7 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
+        eclipse_depth = self.params["eclipse_depth"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
