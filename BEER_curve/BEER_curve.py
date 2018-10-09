@@ -212,9 +212,9 @@ class BEER_curve(object):
             eclipse = cp.evaluate(time_supersample)
 
             # Rescale eclipse
-#           eclipse = 1. - eclipse
-#           eclipse /= eclipse_depth
-#           eclipse = 1. - eclipse
+            eclipse = 1. - eclipse
+            eclipse /= eclipse_depth
+            eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
             eclipse = np.ones_like(time_supersample)
@@ -237,7 +237,7 @@ class BEER_curve(object):
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
-#       E -= np.min(E)
+        E -= np.min(E)
 
         R = self._reflected_emitted_curve()
 
