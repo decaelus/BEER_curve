@@ -36,6 +36,7 @@ class BEER_curve(object):
             params["Abeam"] - amplitude of the beaming, RV signal
             params["F0"] - photometric baseline
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
+            params["eclipse_depth"] - eclipse depth
 
             if(third_harmonic):
             params["A3"] - amplitude of third harmonic
@@ -186,7 +187,7 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        eclipse_depth = self.params['Aplanet']
+        eclipse_depth = self.params["eclipse_depth"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
