@@ -32,9 +32,10 @@ class BEER_curve(object):
                 params["a*"] - limb-darkening coefficients
             params["b"] - impact parameter (stellar radius);
                 if not given, inclination angle must be
-            params["F0"] - photometric baseline
+            params["baseline"] - photometric baseline
             params["Aellip"] - amplitude of the ellipsoidal variations
             params["Abeam"] - amplitude of the beaming, RV signal
+            params["F0"] - planet's phase curve baseline
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
 
             if(third_harmonic):
@@ -133,12 +134,13 @@ class BEER_curve(object):
         Calculates planet's reflected/emitted component, i.e. R in BEER
         """
         
+        F0 = self.params['F0']
         Aplanet = self.params['Aplanet']
         phase_shift = self.params['phase_shift']
 
         phi = self.phi
 
-        return Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
+        return F0 - Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
 
     def _beaming_curve(self):
         """
@@ -231,7 +233,7 @@ class BEER_curve(object):
         transit = self._transit() - 1.
         eclipse = self._eclipse()
 
-        baseline = self.params["F0"]
+        baseline = self.params["baseline"]
 
         Be = self._beaming_curve()
         
