@@ -34,9 +34,7 @@ class BEER_curve(object):
                 if not given, inclination angle must be
             params["Aellip"] - amplitude of the ellipsoidal variations
             params["Abeam"] - amplitude of the beaming, RV signal
-            params["F0"] - photometric baseline
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
-            params["eclipse_depth"] - eclipse depth
 
             if(third_harmonic):
             params["A3"] - amplitude of third harmonic
@@ -134,6 +132,7 @@ class BEER_curve(object):
         Calculates planet's reflected/emitted component, i.e. R in BEER
         """
         
+        F0 = self.params['F0']
         Aplanet = self.params['Aplanet']
         phase_shift = self.params['phase_shift']
 
@@ -187,7 +186,7 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        eclipse_depth = self.params["eclipse_depth"]
+        eclipse_depth = self.params["Aplanet"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
@@ -207,7 +206,7 @@ class BEER_curve(object):
                 cp["a4"] = 0.
 
             cp["T0"] = TE
-            cp["p"] = eclipse_depth
+            cp["p"] = np.sqrt(eclipse_depth)
 
             eclipse = cp.evaluate(time_supersample)
 
@@ -217,7 +216,7 @@ class BEER_curve(object):
             eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
-            eclipse = np.ones_like(time_supersample)
+            eclipse = 0.
 
         return eclipse
 
@@ -229,15 +228,14 @@ class BEER_curve(object):
         time_supersample = self.time_supersample
         time = self.time
 
+        baseline = self.params["F0"]
         transit = self._transit() - 1.
         eclipse = self._eclipse()
-
-        baseline = self.params["F0"]
 
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
-        E -= np.min(E)
+#       E -= np.min(E)
 
         R = self._reflected_emitted_curve()
 
@@ -349,3 +347,4 @@ if __name__ == "__main__":
 
     plt.scatter(t % params['per'], BC.all_signals())
     plt.show(block=True)
+
