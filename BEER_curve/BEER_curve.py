@@ -32,6 +32,7 @@ class BEER_curve(object):
                 params["a*"] - limb-darkening coefficients
             params["b"] - impact parameter (stellar radius);
                 if not given, inclination angle must be
+            params["F0"] - photometric baseline
             params["Aellip"] - amplitude of the ellipsoidal variations
             params["Abeam"] - amplitude of the beaming, RV signal
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
@@ -186,7 +187,7 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        eclipse_depth = self.params["F0"] + self.params["Aplanet"]
+        eclipse_depth = self.params["Aplanet"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
@@ -216,7 +217,7 @@ class BEER_curve(object):
             eclipse = 1. - eclipse
 
         elif(eclipse_depth == 0.): 
-            eclipse = 0.
+            eclipse = np.ones_like(time_supersample)
 
         return eclipse
 
@@ -228,14 +229,13 @@ class BEER_curve(object):
         time_supersample = self.time_supersample
         time = self.time
 
-        baseline = self.params["baseline"]
+        baseline = self.params["F0"]
         transit = self._transit() - 1.
         eclipse = self._eclipse()
 
         Be = self._beaming_curve()
         
         E = self._ellipsoidal_curve()
-#       E -= np.min(E)
 
         R = self._reflected_emitted_curve()
 
