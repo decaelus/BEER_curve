@@ -138,7 +138,7 @@ class BEER_curve(object):
 
         phi = self.phi
 
-        return -Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
+        return F0 - Aplanet*np.cos(2.*np.pi*(phi - phase_shift))
 
     def _beaming_curve(self):
         """
@@ -186,7 +186,7 @@ class BEER_curve(object):
         """
 
         time_supersample = self.time_supersample
-        eclipse_depth = self.params["Aplanet"]
+        eclipse_depth = self.params["F0"] + self.params["Aplanet"]
 
         if(eclipse_depth != 0):
             ma = self.ma    
@@ -206,7 +206,7 @@ class BEER_curve(object):
                 cp["a4"] = 0.
 
             cp["T0"] = TE
-            cp["p"] = np.sqrt(eclipse_depth)
+            cp["p"] = np.sqrt(np.abs(eclipse_depth))
 
             eclipse = cp.evaluate(time_supersample)
 
@@ -228,7 +228,7 @@ class BEER_curve(object):
         time_supersample = self.time_supersample
         time = self.time
 
-        baseline = self.params["F0"]
+        baseline = self.params["baseline"]
         transit = self._transit() - 1.
         eclipse = self._eclipse()
 
