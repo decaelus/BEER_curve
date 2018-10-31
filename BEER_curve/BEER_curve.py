@@ -23,6 +23,7 @@ class BEER_curve(object):
             params["per"] - orbital period (any units)
             params["a"] - semi-major axis (in units of stellar radius)
             params["b"] - impact parameter (in units of stellar radius)
+            params["p"] - planetary radius (in stellar radii)
             params["T0"] - mid-transit time
             params["baseline"] - photometric baseline
             params["Aellip"] - amplitude of the ellipsoidal variations
@@ -125,6 +126,30 @@ class BEER_curve(object):
 
         return ma.evaluate(self.time_supersample) - 1.
 
+    def _scaled_eclipse(self):
+        """
+        Calculates scaled eclipse signal to reduce reflection curve
+        """
+        ma = MandelAgolLC(orbit='circular', ld='quad')
+
+        ma['per'] = self.params['per']
+        ma['a'] = self.params['a']
+        ma['T0'] = self._calc_eclipse_time()
+        ma['p'] = self.params['p']
+        ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
+        ma['linLimb'] = 0.
+        ma['quadLimb'] = 0.
+
+        scaled_eclipse = np.ones_like(self.time_supersample)
+
+        if(self.params['eclipse_depth'] != 0):
+            scaled_eclipse = ma.evaluate(self.time_supersample)
+            scaled_eclipse -= 1.
+            scaled_eclipse /= ma['p']**2.
+            scaled_eclipse += 1.
+
+        return scaled_eclipse
+
     def _calc_eclipse_time(self):
         """
         Returns eclipse time --
@@ -147,7 +172,10 @@ class BEER_curve(object):
         R = self._reflected_emitted_curve()
         eclipse = self._eclipse()
 
-        full_signal = baseline + Be + E + R + eclipse
+        # To reduce the planet's phase curve during eclipse
+        scaled_eclipse = self._scaled_eclipse()
+
+        full_signal = baseline + Be + E + R*scaled_eclipse + eclipse
         if('A3' in self.params):
             full_signal += self._third_harmonic()
 
@@ -172,6 +200,7 @@ if __name__ == "__main__":
             "per": 2.204733,
             "a": 4.15,
             "b": 4.15*np.cos(83.1/180.*np.pi),
+            "p": 1./12.85,
             "T0": 0.,
             "baseline": 0.,
             "Aellip": 37.e-6,
