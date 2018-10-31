@@ -123,7 +123,7 @@ class BEER_curve(object):
         ma['linLimb'] = 0.
         ma['quadLimb'] = 0.
 
-        return ma.evaluate(time_supersample) - 1.
+        return ma.evaluate(self.time_supersample) - 1.
 
     def _calc_eclipse_time(self):
         """
@@ -145,8 +145,9 @@ class BEER_curve(object):
         Be = self._beaming_curve()
         E = self._ellipsoidal_curve()
         R = self._reflected_emitted_curve()
+        eclipse = self._eclipse()
 
-        full_signal = baseline + Be + E + R
+        full_signal = baseline + Be + E + R + eclipse
         if('A3' in self.params):
             full_signal += self._third_harmonic()
 
