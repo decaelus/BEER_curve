@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 from PyAstronomy.pyasl import isInTransit
+from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
 
 __all__ = ['BEER_curve']
 
@@ -20,6 +21,8 @@ class BEER_curve(object):
 
         params : dict of floats/numpy arrays
             params["per"] - orbital period (any units)
+            params["a"] - semi-major axis (in units of stellar radius)
+            params["b"] - impact parameter (in units of stellar radius)
             params["T0"] - mid-transit time
             params["baseline"] - photometric baseline
             params["Aellip"] - amplitude of the ellipsoidal variations
@@ -99,7 +102,7 @@ class BEER_curve(object):
 
     def _third_harmonic(self):
         """
-        Returns third harmonic relevant to HAT-P-7 and KOI-13
+        Returns third harmonic
         """
         A3 = self.params['A3']
         theta3 = self.params['theta3']
@@ -108,14 +111,29 @@ class BEER_curve(object):
         return A3*np.cos(3.*2.*np.pi*(phi - theta3))
 
     def _eclipse(self):
-            ma = MandelAgolLC(orbit="circular", ld="quad")
-    ma['per'] = ephemeris_popt[0]
-    ma['a'] = transit_params[1]
-    ma['T0'] = (ephemeris_popt[1] % ephemeris_popt[0]) + 0.5*params['per']
-    ma['p'] = np.sqrt(np.abs(eclipse_depth))*np.sign(eclipse_depth)
-    ma['i'] = np.arccos(transit_params[4]/transit_params[1])*180./np.pi
-    ma["linLimb"] = 0.
-    ma["quadLimb"] = 0.
+        """
+        Calculates eclipse signal
+        """
+            ma = MandelAgolLC(orbit='circular', ld='quad')
+
+            ma['per'] = self.params['per']
+            ma['a'] = self.params['a']
+            ma['T0'] = self._calc_eclipse_time()
+            ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))*\
+                    np.sign(self.params['eclipse_depth'])
+            ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
+            ma['linLimb'] = 0.
+            ma['quadLimb'] = 0.
+
+            return ma.evaluate(time_supersample) - 1.
+
+    def _calc_eclipse_time(self):
+        """
+        Returns eclipse time --
+          For now (2018 Oct 31), assumes circular orbit
+        """
+
+        return self.params['T0'] + 0.5*self.params['per']
 
 #    transit_supersample = np.zeros_like(time_supersample)
     transit_supersample = ma.evaluate(time_supersample) - 1.
