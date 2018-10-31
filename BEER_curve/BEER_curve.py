@@ -58,8 +58,6 @@ class BEER_curve(object):
         # Orbital phase
         self.phi = self._calc_phi()
 
-        self.third_harmonic = third_harmonic
-
     def _calc_phi(self):
         """
         Calculates orbital phase
@@ -114,18 +112,18 @@ class BEER_curve(object):
         """
         Calculates eclipse signal
         """
-            ma = MandelAgolLC(orbit='circular', ld='quad')
+        ma = MandelAgolLC(orbit='circular', ld='quad')
 
-            ma['per'] = self.params['per']
-            ma['a'] = self.params['a']
-            ma['T0'] = self._calc_eclipse_time()
-            ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))*\
-                    np.sign(self.params['eclipse_depth'])
-            ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
-            ma['linLimb'] = 0.
-            ma['quadLimb'] = 0.
+        ma['per'] = self.params['per']
+        ma['a'] = self.params['a']
+        ma['T0'] = self._calc_eclipse_time()
+        ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))*\
+            np.sign(self.params['eclipse_depth'])
+        ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
+        ma['linLimb'] = 0.
+        ma['quadLimb'] = 0.
 
-            return ma.evaluate(time_supersample) - 1.
+        return ma.evaluate(time_supersample) - 1.
 
     def _calc_eclipse_time(self):
         """
@@ -134,9 +132,6 @@ class BEER_curve(object):
         """
 
         return self.params['T0'] + 0.5*self.params['per']
-
-#    transit_supersample = np.zeros_like(time_supersample)
-    transit_supersample = ma.evaluate(time_supersample) - 1.
 
     def all_signals(self):
         """
@@ -152,7 +147,7 @@ class BEER_curve(object):
         R = self._reflected_emitted_curve()
 
         full_signal = baseline + Be + E + R
-        if(self.third_harmonic):
+        if('A3' in self.params):
             full_signal += self._third_harmonic()
 
         self.model_signal = full_signal
@@ -169,16 +164,21 @@ class BEER_curve(object):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import numpy as np
 
-    # HAT-P-7 b parameters from Jackson et al. (2013)
+    # HAT-P-7 b parameters from Jackson et al. (2012)
     params = {
             "per": 2.204733,
+            "a": 4.15,
+            "b": 4.15*np.cos(83.1/180.*np.pi),
             "T0": 0.,
+            "baseline": 0.,
             "Aellip": 37.e-6,
             "Abeam": 5.e-6,
             "F0": 0., 
             "Aplanet": 60.e-6,
-            "phase_shift": 0.
+            "phase_shift": 0.,
+            "eclipse_depth": 60.e-6
             }
 
     t = np.linspace(0, 2*params['per'], 1000)
