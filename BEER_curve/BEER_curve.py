@@ -11,8 +11,7 @@ class BEER_curve(object):
     components (as well as transit and eclipse signals)
     """
 
-    def __init__(self, time, params, data=None, third_harmonic=False,
-            supersample_factor=1, exp_time=0):
+    def __init__(self, time, params, supersample_factor=1, exp_time=0):
         """
         Parameters
         ----------
@@ -26,16 +25,10 @@ class BEER_curve(object):
             params["Aellip"] - amplitude of the ellipsoidal variations
             params["Abeam"] - amplitude of the beaming, RV signal
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
+            params["eclipse_depth"] - depth of eclipse
 
-            if(third_harmonic):
             params["A3"] - amplitude of third harmonic
             params["theta3"] - phase offset for third harmonic
-
-        data : numpy array
-            observational data (same units as BEER amplitudes)
-
-        third_harmonic : bool
-            Whether or not to include a third harmonic in phase curve
 
         supersample_factor : int
             Number of points subdividing exposure
@@ -63,9 +56,6 @@ class BEER_curve(object):
         self.phi = self._calc_phi()
 
         self.third_harmonic = third_harmonic
-
-        if(data is not None):
-            self.data = data
 
     def _calc_phi(self):
         """
@@ -116,6 +106,19 @@ class BEER_curve(object):
         phi = self.phi
 
         return A3*np.cos(3.*2.*np.pi*(phi - theta3))
+
+    def _eclipse(self):
+            ma = MandelAgolLC(orbit="circular", ld="quad")
+    ma['per'] = ephemeris_popt[0]
+    ma['a'] = transit_params[1]
+    ma['T0'] = (ephemeris_popt[1] % ephemeris_popt[0]) + 0.5*params['per']
+    ma['p'] = np.sqrt(np.abs(eclipse_depth))*np.sign(eclipse_depth)
+    ma['i'] = np.arccos(transit_params[4]/transit_params[1])*180./np.pi
+    ma["linLimb"] = 0.
+    ma["quadLimb"] = 0.
+
+#    transit_supersample = np.zeros_like(time_supersample)
+    transit_supersample = ma.evaluate(time_supersample) - 1.
 
     def all_signals(self):
         """
