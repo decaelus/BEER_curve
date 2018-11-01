@@ -3,7 +3,7 @@ import copy
 from PyAstronomy.pyasl import isInTransit
 from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
 
-__all__ = ['BEER_curve']
+__all__ = ['BEER_curve', 'all_signals_func']
 
 
 class BEER_curve(object):
@@ -29,6 +29,7 @@ class BEER_curve(object):
             params["Aellip"] - amplitude of the ellipsoidal variations
             params["Abeam"] - amplitude of the beaming, RV signal
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
+            params["phase_shift"] - phase shift of planet's signal
             params["eclipse_depth"] - depth of eclipse
 
             params["A3"] - amplitude of third harmonic
@@ -164,6 +165,50 @@ class BEER_curve(object):
 
         return full_signal
 
+def all_signals_func(time, per, a, b, p, T0, baseline, Aellip, Abeam, Aplanet,
+        phase_shift, eclipse_depth, supersample_factor=1., exp_time=0.):
+    """
+    A standalone function version of the BEER_curve all_signals method
+
+    Parameters
+    ----------
+    time : numpy array
+        observational time (same units at orbital period)
+
+    per - orbital period (any units)
+    a - semi-major axis (in units of stellar radius)
+    b - impact parameter (in units of stellar radius)
+    p - planetary radius (in stellar radii)
+    T0 - mid-transit time
+    baseline - photometric baseline
+    Aellip - amplitude of the ellipsoidal variations
+    Abeam - amplitude of the beaming, RV signal
+    Aplanet - amplitude of planet's reflected/emitted signal
+    phase_shift - phase shift of planet's signal
+    eclipse_depth - depth of eclipse
+
+    supersample_factor : (optional) int
+        Number of points subdividing exposure
+
+    exp_time : (optional) float
+        Exposure time (in same units as `t`)
+
+    Returns
+    -------
+    The BEER curve signals, including the eclipse but NOT the transit
+
+    """
+
+    params = {'per': per, 'a': a, 'b': b, 'p': p, 'T0': T0,
+            'baseline': baseline, 'Aellip': Aellip, 'Abeam': Abeam, 
+            'Aplanet': Aplanet, 'phase_shift': phase_shift, 
+            'eclipse_depth': eclipse_depth}
+
+    BC = BEER_curve(time, params, 
+            supersample_factor=supersample_factor, exp_time=exp_time)
+
+    return BC.all_signals()
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import numpy as np
@@ -182,10 +227,15 @@ if __name__ == "__main__":
             "phase_shift": 0.,
             "eclipse_depth": 60.e-6
             }
+    params_arr = [params['per'], params['a'], params['b'], params['p'], 
+            params['T0'], params['baseline'], params['Aellip'],
+            params['Abeam'], params['Aplanet'], params['phase_shift'], 
+            params['eclipse_depth']]
 
     t = np.linspace(0, 2*params['per'], 1000)
 
     BC = BEER_curve(t, params)
 
-    plt.plot(t % params['per'], BC.all_signals(), marker='.', ls='')
+    plt.plot(t % params['per'], BC.all_signals(), 'bo')
+    plt.plot(t % params['per'], all_signals_func(t, *params_arr), 'r.')
     plt.show(block=True)
