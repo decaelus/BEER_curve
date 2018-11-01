@@ -126,30 +126,6 @@ class BEER_curve(object):
 
         return ma.evaluate(self.time_supersample) - 1.
 
-    def _scaled_eclipse(self):
-        """
-        Calculates scaled eclipse signal to reduce reflection curve
-        """
-        ma = MandelAgolLC(orbit='circular', ld='quad')
-
-        ma['per'] = self.params['per']
-        ma['a'] = self.params['a']
-        ma['T0'] = self._calc_eclipse_time()
-        ma['p'] = self.params['p']
-        ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
-        ma['linLimb'] = 0.
-        ma['quadLimb'] = 0.
-
-        scaled_eclipse = np.ones_like(self.time_supersample)
-
-        if(self.params['eclipse_depth'] != 0):
-            scaled_eclipse = ma.evaluate(self.time_supersample)
-            scaled_eclipse -= 1.
-            scaled_eclipse /= ma['p']**2.
-            scaled_eclipse += 1.
-
-        return scaled_eclipse
-
     def _calc_eclipse_time(self):
         """
         Returns eclipse time --
@@ -172,10 +148,7 @@ class BEER_curve(object):
         R = self._reflected_emitted_curve()
         eclipse = self._eclipse()
 
-        # To reduce the planet's phase curve during eclipse
-        scaled_eclipse = self._scaled_eclipse()
-
-        full_signal = baseline + Be + E + R*scaled_eclipse + eclipse
+        full_signal = baseline + Be + E + R + eclipse
         if('A3' in self.params):
             full_signal += self._third_harmonic()
 
@@ -205,7 +178,6 @@ if __name__ == "__main__":
             "baseline": 0.,
             "Aellip": 37.e-6,
             "Abeam": 5.e-6,
-            "F0": 0., 
             "Aplanet": 60.e-6,
             "phase_shift": 0.,
             "eclipse_depth": 60.e-6
@@ -215,5 +187,5 @@ if __name__ == "__main__":
 
     BC = BEER_curve(t, params)
 
-    plt.scatter(t % params['per'], BC.all_signals())
+    plt.plot(t % params['per'], BC.all_signals(), marker='.', ls='')
     plt.show(block=True)
