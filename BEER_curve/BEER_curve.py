@@ -27,10 +27,16 @@ class BEER_curve(object):
             params["T0"] - mid-transit time
             params["baseline"] - photometric baseline
             params["Aellip"] - amplitude of the ellipsoidal variations
+            params["eclipse_depth"] - depth of eclipse
+
             params["Abeam"] - amplitude of the beaming, RV signal
             params["Aplanet"] - amplitude of planet's reflected/emitted signal
             params["phase_shift"] - phase shift of planet's signal
-            params["eclipse_depth"] - depth of eclipse
+
+            OR
+
+            params["Asin"] - amplitude of sine term
+            params["Acos"] - amplitude of cosine term
 
             params["A3"] - amplitude of third harmonic
             params["theta3"] - phase offset for third harmonic
@@ -100,6 +106,26 @@ class BEER_curve(object):
 
         return -Aellip*np.cos(2.*2.*np.pi*phi)
 
+    def _sine_term(self):
+        """
+        Returns -Asin*sin(2*pi*phi)
+        """
+
+        Asin = self.params['Asin']
+        phi = self.phi
+
+        return -Asin*np.sin(2.*np.pi*phi)
+
+    def _cosine_term(self):
+        """
+        Returns -Acos*cos(2*pi*phi)
+        """
+
+        Acos = self.params['Acos']
+        phi = self.phi
+
+        return -Acos*np.cos(2.*np.pi*phi)
+
     def _third_harmonic(self):
         """
         Returns third harmonic
@@ -144,10 +170,15 @@ class BEER_curve(object):
         time = self.time
 
         baseline = self.params["baseline"]
-        Be = self._beaming_curve()
         E = self._ellipsoidal_curve()
-        R = self._reflected_emitted_curve()
         eclipse = self._eclipse()
+
+        if(('Aplanet' in self.params.keys()) & ('Abeam' in self.params.keys())):
+            Be = self._beaming_curve()
+            R = self._reflected_emitted_curve()
+        else:
+            Be = self._sine_term()
+            R = self._cosine_term()
 
         full_signal = baseline + Be + E + R + eclipse
         if('A3' in self.params):
@@ -224,18 +255,32 @@ if __name__ == "__main__":
             "Aellip": 37.e-6,
             "Abeam": 5.e-6,
             "Aplanet": 60.e-6,
-            "phase_shift": 0.,
+            "phase_shift": 0.01,
             "eclipse_depth": 60.e-6
             }
-    params_arr = [params['per'], params['a'], params['b'], params['p'], 
-            params['T0'], params['baseline'], params['Aellip'],
-            params['Abeam'], params['Aplanet'], params['phase_shift'], 
-            params['eclipse_depth']]
 
     t = np.linspace(0, 2*params['per'], 1000)
 
     BC = BEER_curve(t, params)
 
     plt.plot(t % params['per'], BC.all_signals(), 'bo')
-    plt.plot(t % params['per'], all_signals_func(t, *params_arr), 'r.')
+
+    # And also the sine and cosine versions
+    params = {
+            "per": 2.204733,
+            "a": 4.15,
+            "b": 4.15*np.cos(83.1/180.*np.pi),
+            "p": 1./12.85,
+            "T0": 0.,
+            "baseline": 0.,
+            "Aellip": 37.e-6,
+            "Asin": -5.e-6 + 60.e-6*np.sin(2.*np.pi*0.01), 
+            "Acos": 60.e-6*np.cos(2.*np.pi*0.01),
+            "eclipse_depth": 60.e-6
+            }
+
+    BC = BEER_curve(t, params)
+
+    plt.plot(t % params['per'], BC.all_signals(), 'r.')
     plt.show(block=True)
+
