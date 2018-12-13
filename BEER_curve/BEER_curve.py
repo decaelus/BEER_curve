@@ -108,13 +108,13 @@ class BEER_curve(object):
 
     def _sine_term(self):
         """
-        Returns -Asin*sin(2*pi*phi)
+        Returns Asin*sin(2*pi*phi)
         """
 
         Asin = self.params['Asin']
         phi = self.phi
 
-        return -Asin*np.sin(2.*np.pi*phi)
+        return Asin*np.sin(2.*np.pi*phi)
 
     def _cosine_term(self):
         """
@@ -274,7 +274,7 @@ if __name__ == "__main__":
             "T0": 0.,
             "baseline": 0.,
             "Aellip": 37.e-6,
-            "Asin": -5.e-6 + 60.e-6*np.sin(2.*np.pi*0.01), 
+            "Asin": 5.e-6 - 60.e-6*np.sin(2.*np.pi*0.01), 
             "Acos": 60.e-6*np.cos(2.*np.pi*0.01),
             "eclipse_depth": 60.e-6
             }
