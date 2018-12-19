@@ -145,13 +145,13 @@ class BEER_curve(object):
         ma['per'] = self.params['per']
         ma['a'] = self.params['a']
         ma['T0'] = self._calc_eclipse_time()
-        ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))*\
-            np.sign(self.params['eclipse_depth'])
+        ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))
         ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
         ma['linLimb'] = 0.
         ma['quadLimb'] = 0.
 
-        return ma.evaluate(self.time_supersample) - 1.
+        return (ma.evaluate(self.time_supersample) - 1.)*\
+                np.sign(self.params['eclipse_depth'])
 
     def _calc_eclipse_time(self):
         """
