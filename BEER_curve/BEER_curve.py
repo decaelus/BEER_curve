@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-import batman
+from batman.transitmodel import TransitModel, TransitParams
 
 __all__ = ['BEER_curve', 'all_signals_func']
 
@@ -139,7 +139,7 @@ class BEER_curve(object):
         """
         Calculates eclipse signal
         """
-        ma = batman.TransitParams()
+        ma = TransitParams()
 
         ma.t0 = self._calc_eclipse_time()
         ma.per = self.params['per']
@@ -151,7 +151,7 @@ class BEER_curve(object):
         ma.u = [0., 0.] # uniform disk for eclipse
         ma.limb_dark = "quadratic"       #limb darkening model
 
-        m = batman.TransitModel(ma, self.time_supersample) # initializes model
+        m = TransitModel(ma, self.time_supersample) # initializes model
         flux = m.light_curve(ma) # calculates light curve
 
         return (flux - 1.)*np.sign(self.params['eclipse_depth'])
