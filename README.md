@@ -27,6 +27,7 @@ params = {
     "Abeam": 5.e-6,
     "F0": 0.,
     "Aplanet": 60.e-6,
+    "eclipse_depth": 60.e-6,
     "phase_shift": 0.
     }
 
