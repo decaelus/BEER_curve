@@ -21,4 +21,4 @@ setup(name='BEER_curve',
     ],
     license=['MIT'],
     packages=['BEER_curve'],
-    install_requires=['PyAstronomy', 'statsmodels', 'numpy', 'scipy'])
+    install_requires=['statsmodels', 'numpy', 'scipy', 'batman'])

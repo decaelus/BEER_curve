@@ -1,7 +1,6 @@
 import numpy as np
 import copy
-from PyAstronomy.pyasl import isInTransit
-from PyAstronomy.modelSuite.XTran.forTrans import MandelAgolLC
+import batman
 
 __all__ = ['BEER_curve', 'all_signals_func']
 
@@ -140,18 +139,22 @@ class BEER_curve(object):
         """
         Calculates eclipse signal
         """
-        ma = MandelAgolLC(orbit='circular', ld='quad')
+        ma = batman.TransitParams()
 
-        ma['per'] = self.params['per']
-        ma['a'] = self.params['a']
-        ma['T0'] = self._calc_eclipse_time()
-        ma['p'] = np.sqrt(np.abs(self.params['eclipse_depth']))
-        ma['i'] = np.arccos(self.params['b']/self.params['a'])*180./np.pi
-        ma['linLimb'] = 0.
-        ma['quadLimb'] = 0.
+        ma.t0 = self._calc_eclipse_time()
+        ma.per = self.params['per']
+        ma.rp = np.sqrt(np.abs(self.params['eclipse_depth']))
+        ma.a = self.params['a']
+        ma.inc = np.arccos(self.params['b']/self.params['a'])*180./np.pi
+        ma.ecc = 0. # Assume zero eccentricity for now
+        ma.w = 90. #long of periastron (in degrees); irrelevant for e = 0
+        ma.u = [0., 0.] # uniform disk for eclipse
+        ma.limb_dark = "quadratic"       #limb darkening model
 
-        return (ma.evaluate(self.time_supersample) - 1.)*\
-                np.sign(self.params['eclipse_depth'])
+        m = batman.TransitModel(ma, self.time_supersample) # initializes model
+        flux = m.light_curve(ma) # calculates light curve
+
+        return (flux - 1.)*np.sign(self.params['eclipse_depth'])
 
     def _calc_eclipse_time(self):
         """
