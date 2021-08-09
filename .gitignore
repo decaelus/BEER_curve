@@ -1,3 +1,4 @@
 BEER_curve.egg-info/
 *.swp
 *.pyc
+build/
