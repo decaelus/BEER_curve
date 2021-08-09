@@ -6,25 +6,6 @@ with thanks to [Faigler and Mazeh (2011)](http://adsabs.harvard.edu/abs/2011MNRA
 ```
 pip install BEER_curve
 ```
-
-BEER_curve uses
-[PyAstronomy](https://www.hs.uni-hamburg.de/DE/Ins/Per/Czesla/PyA/PyA/index.html) to calculate transits and eclipses. In order to install the transit routines, you'll need also to compile associated transit files occultquad and occultnl. The following procedure works for my computer, running Mac OS 10.13.1 (as of 2018 May 30):
-
-1. Make sure you have a working fortran compiler, such as [gcc](https://stackoverflow.com/questions/9353444/how-to-use-install-gcc-on-mac-os-x-10-8-xcode-4-4).
-2. Navigate to PyAstronomy's forTrans directory - 
-    1. To figure out where PyAstronomy lives on your computer, in a [terminal window](http://blog.teamtreehouse.com/introduction-to-the-mac-os-x-command-line), type `pip show PyAstronomy` (which assumes you have a working version of [pip](https://conda.io/docs/user-guide/install/index.html)).
-    2. At the bottom of the PyAstronomy description that comes up, you should
-       see something like:
-       ```
-       Location: /Users/bjackson/anaconda2/lib/python2.7/site-packages
-       ```
-       Next type, `cd
-       /Users/bjackson/anaconda2/lib/python2.7/site-packages/PyAstronomy/modelSuite/XTran/forTrans`.
-       You've made it to the forTrans directory!
-3. Run [f2py](https://docs.scipy.org/doc/numpy-1.14.0/f2py/index.html) to
-   generate the required .so files:
-   * f2py -c occultquad.pyf occultquad.f
-   * f2py -c occultnl.pyf occultnl.f
 ### Example
 ```
 import matplotlib.pyplot as plt
@@ -41,6 +22,7 @@ params = {
     "linLimb": 0.314709,
     "quadLimb": 0.312125,
     "b": 0.499,
+    "baseline": 0.,
     "Aellip": 37.e-6,
     "Abeam": 5.e-6,
     "F0": 0.,
