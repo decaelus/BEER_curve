@@ -184,7 +184,7 @@ class BEER_curve(object):
             R = self._cosine_term()
 
         full_signal = baseline + Be + E + R + eclipse
-        if('A3' in self.params):
+        if('A3' in self.params.keys()):
             full_signal += self._third_harmonic()
 
         self.model_signal = full_signal
