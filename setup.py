@@ -19,6 +19,6 @@ setup(name='BEER_curve',
         'Topic :: Scientific/Engineering',
         'Programming Language :: Python'
     ],
-    license=['MIT'],
+    license='MIT',
     packages=['BEER_curve'],
     install_requires=['statsmodels', 'numpy', 'scipy', 'batman'])
